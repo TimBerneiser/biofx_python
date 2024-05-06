@@ -9,6 +9,7 @@ RUN = f'python {PRG}' if platform.system() == 'Windows' else PRG
 TEST1 = ('./tests/inputs/input1.txt', '1 2 3 4')
 TEST2 = ('./tests/inputs/input2.txt', '20 12 17 21')
 TEST3 = ('./tests/inputs/input3.txt', '196 231 237 246')
+TEST4 = ("./tests/inputs/input4.tyt", "10 4 24 21")
 
 
 # --------------------------------------------------
