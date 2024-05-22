@@ -16,7 +16,7 @@ class Args(NamedTuple):
     """ Command-line arguments """
     files: List[TextIO]
     outfile: TextIO
-    format: str
+    fformat: str
     number: int
     max_len: int
     min_len: int
@@ -95,7 +95,7 @@ def get_args() -> Args:
     args = parser.parse_args()
 
     return Args(files=args.file, outfile=args.outfile,
-                format=args.format, number=args.number,
+                fformat=args.format, number=args.number,
                 max_len=args.max_len, min_len=args.min_len,
                 kmer=args.kmer, seed=args.seed)
 
@@ -106,13 +106,14 @@ def main() -> None:
 
     args = get_args()
     random.seed(args.seed)
-    weights = read_training(args.files, args.format, args.kmer)
+    weights = read_training(args.files, args.fformat, args.kmer)
 
     out_file = open(args.outfile.name, 'wt')
     i = 1
-    while _ in range(args.number):
-        out_file.write(f'>{i}\n')
-        out_file.write(f'{gen_seq(weights, args.kmer, args.min_len, args.max_len)}\n')
+    while i < args.number+1:
+        if seq := gen_seq(weights, args.kmer, args.min_len, args.max_len):
+            out_file.write(f'>{i}\n{seq}\n')
+            i +=1
 
 
 # --------------------------------------------------
@@ -145,6 +146,7 @@ def read_training(files: List[TextIO], fformat: str, k) -> Weights:
     return markov
 
 
+# --------------------------------------------------
 def test_read_training() -> None:
     """ Test calc_markov """
 
@@ -174,11 +176,14 @@ def gen_seq(weighting: Weights, k: int, min_len: int, max_len: int) -> Optional[
     seq_len = random.randint(min_len, max_len)
 
     while len(seq) < seq_len:
+        if seq[-k+1:] not in weighting.keys():
+            break
         pop = list(weighting[seq[-k+1:]].keys())
         chance = list(weighting[seq[-k+1:]].values())
         seq += random.choices(population=pop, weights=chance, k=1)[0]
 
-    return seq
+    return seq if len(seq) >= min_len else None
+
 
 # --------------------------------------------------
 def test_gen_seq() -> None:

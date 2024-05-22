@@ -17,7 +17,7 @@ class Args(NamedTuple):
     """ Command-line arguments """
     files: List[TextIO]
     outfile: TextIO
-    format: str
+    fformat: str
     number: int
     max_len: int
     min_len: int
@@ -96,7 +96,7 @@ def get_args() -> Args:
     args = parser.parse_args()
 
     return Args(files=args.file, outfile=args.outfile,
-                format=args.format, number=args.num,
+                fformat=args.format, number=args.num,
                 max_len=args.max_len, min_len=args.min_len,
                 kmer=args.kmer, seed=args.seed)
 
@@ -107,7 +107,7 @@ def main() -> None:
 
     args = get_args()
     random.seed(args.seed)
-    weights = read_training(args.files, args.format, args.kmer)
+    weights = read_training(args.files, args.fformat, args.kmer)
 
     out_file = open(args.outfile.name, 'wt')
     i=1
@@ -174,8 +174,9 @@ def gen_seq(weighting: Weights, number: int, k: int, min_len: int, max_len: int)
     """ Generate a sequence """
 
     rand_seqs = []
+    i = 0
 
-    for _ in range(number):
+    while i < number:
         seq = random.choice(list(weighting.keys()))
         seq_len = random.randint(min_len, max_len)
         while len(seq) < seq_len:
@@ -184,7 +185,9 @@ def gen_seq(weighting: Weights, number: int, k: int, min_len: int, max_len: int)
             pop = list(weighting[seq[-k+1:]].keys())
             chance = list(weighting[seq[-k+1:]].values())
             seq += random.choices(population=pop, weights=chance, k=1)[0]
-        rand_seqs.append(seq)
+        if len(seq)>=min_len:
+            rand_seqs.append(seq)
+            i+=1
 
     return rand_seqs
 
